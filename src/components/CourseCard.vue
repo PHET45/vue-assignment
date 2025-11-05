@@ -1,16 +1,48 @@
 <template>
   <div class="course-list">
     <div class="course-card">
-      <h3>ชื่อคอร์ส: ...</h3>
-      <p>ราคา: ... บาท</p>
-      <button>เพิ่มในรายการโปรด</button>
+      <h3>ชื่อคอร์ส: {{ course.title }}</h3>
+      <p>ราคา: {{ course.price }} บาท</p>
+
+      <button
+        :class="{ added: isAdded || !hasName }"
+        :disabled="isAdded || !hasName"
+        @click="addToFavorite"
+      >
+        <!-- เปลี่ยนข้อความตามเงื่อนไข -->
+        {{ !hasName ? "กรุณากรอกชื่อก่อน" : isAdded ? "เพิ่มแล้ว" : "เพิ่มในรายการโปรด" }}
+      </button>
+
     </div>
   </div>
 </template>
 
 <script setup>
-// TODO: import { useFavoriteStore } แล้วเขียนฟังก์ชันเพิ่มคอร์สลง store
-// TODO: defineProps({ course: Object })
+import { computed } from "vue";
+import { useFavoriteStore } from "../stores/favorite";
+
+const favoriteStore = useFavoriteStore();
+
+const props = defineProps({
+  course: {
+    type: Object,
+    required: true,
+  },
+});
+
+// ✅ เช็คว่ามีการกรอก username หรือยัง
+const hasName = computed(() => favoriteStore.username.trim() !== "");
+
+// ✅ เช็คว่า course ถูกเพิ่มแล้วหรือยัง
+const isAdded = computed(() =>
+  favoriteStore.favorites.some((c) => c.id === props.course.id)
+);
+
+function addToFavorite() {
+  if (!isAdded.value && hasName.value) {
+    favoriteStore.addFavorite(props.course);
+  }
+}
 </script>
 
 <style scoped>
@@ -37,6 +69,7 @@ h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  color: black;
 }
 
 p {
@@ -53,7 +86,12 @@ button {
   cursor: pointer;
 }
 
-button:hover {
+button.added {
+  background-color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+button:hover:not(.added) {
   background-color: #2c9c6d;
 }
 </style>
